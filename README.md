@@ -1,5 +1,9 @@
 # 🦎 08_Cozy_Gecko
 
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Docker](https://img.shields.io/badge/Docker-Compose-blue)
+![Python](https://img.shields.io/badge/Python-3.14-blue)
+
 **Una pequeña base de IA generativa local, simple, portable y lista para evolucionar.**
 
 Cozy Gecko nace como un laboratorio para explorar cómo construir soluciones de IA que no necesiten empezar siendo enormes para ser útiles.
