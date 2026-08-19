@@ -1,22 +1,55 @@
 services:
   ollama:
-    image: ollama/ollama:latest
-    container_name: cozy-gecko-ollama
+    image: ollama/ollama:0.32.14
     ports:
-      - "11434:11434"
+      - "127.0.0.1:11434:11434"
     volumes:
       - cozy_gecko_ollama:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
     restart: unless-stopped
 
+  model-loader:
+    image: ollama/ollama:0.32.14
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    command: ["pull", "${MODEL:-llama3.2:1b}"]
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: "no"
+
   api:
-    build: ./app
-    container_name: cozy-gecko-api
+    build:
+      context: ./app
     ports:
       - "8000:8000"
     environment:
-      - OLLAMA_URL=http://ollama:11434
+      OLLAMA_URL: http://ollama:11434
+      MODEL: ${MODEL:-llama3.2:1b}
+      REQUEST_TIMEOUT_SECONDS: ${REQUEST_TIMEOUT_SECONDS:-120}
+      MAX_PROMPT_LENGTH: ${MAX_PROMPT_LENGTH:-4000}
     depends_on:
-      - ollama
+      ollama:
+        condition: service_healthy
+      model-loader:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
     restart: unless-stopped
 
 volumes:
